@@ -1,17 +1,15 @@
 <?php
-namespace WPSnippetManager;
-
-class MetaBoxes {
+class WP_Snippet_Manager_Meta_Box {
     public function __construct() {
-        add_action('add_meta_boxes', [$this, 'add_meta_box']);
-        add_action('save_post_code_snippet', [$this, 'save_meta_box_data']);
+        add_action('add_meta_boxes', array($this, 'add_meta_box'));
+        add_action('save_post', array($this, 'save_meta_box_data'));
     }
 
     public function add_meta_box() {
         add_meta_box(
             'snippet_location',
             __('Snippet Location', 'wp-snippet-manager'),
-            [$this, 'render_meta_box'],
+            array($this, 'render_meta_box'),
             'code_snippet',
             'side',
             'high'
@@ -38,10 +36,19 @@ class MetaBoxes {
     }
 
     public function save_meta_box_data($post_id) {
-        if (!isset($_POST['wp_snippet_meta_box_nonce']) || 
-            !wp_verify_nonce($_POST['wp_snippet_meta_box_nonce'], 'wp_snippet_meta_box') ||
-            defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ||
-            !current_user_can('edit_post', $post_id)) {
+        if (!isset($_POST['wp_snippet_meta_box_nonce'])) {
+            return;
+        }
+
+        if (!wp_verify_nonce($_POST['wp_snippet_meta_box_nonce'], 'wp_snippet_meta_box')) {
+            return;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (!current_user_can('edit_post', $post_id)) {
             return;
         }
 
